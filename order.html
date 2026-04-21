@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BW Dashboard - Order Capture</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    :root{
+      --bw-navy:#10263f;
+      --bw-navy-2:#173656;
+      --bw-red:#c62828;
+      --bw-red-2:#e03a3a;
+      --bw-panel:rgba(255,255,255,.08);
+      --bw-panel-2:rgba(255,255,255,.12);
+      --bw-border:rgba(255,255,255,.14);
+      --bw-text:#f5f7fb;
+      --bw-muted:#bfd0e0;
+      --bw-shadow:0 14px 34px rgba(0,0,0,.28);
+      --radius:18px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family: Arial, Helvetica, sans-serif;
+      color:var(--bw-text);
+      background:
+        radial-gradient(circle at top right, rgba(255,255,255,.08), transparent 22%),
+        radial-gradient(circle at bottom left, rgba(255,255,255,.06), transparent 20%),
+        linear-gradient(160deg, var(--bw-navy), #0b1a2c 58%, #09131f 100%);
+      min-height:100vh;
+    }
+
+    .page{
+      max-width:1180px;
+      margin:0 auto;
+      padding:18px 16px 44px;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      margin-bottom:18px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+    }
+
+    .brand-mark{
+      width:48px;
+      height:48px;
+      border-radius:14px;
+      background:linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.03));
+      border:1px solid var(--bw-border);
+      box-shadow:var(--bw-shadow);
+      display:grid;
+      place-items:center;
+      font-weight:700;
+      letter-spacing:.04em;
+    }
+
+    .brand-title{
+      font-size:1.05rem;
+      font-weight:700;
+      line-height:1.1;
+    }
+
+    .brand-sub{
+      font-size:.75rem;
+      color:var(--bw-muted);
+      margin-top:3px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    .nav-btn,
+    .action-btn,
+    .mini-btn,
+    .scan-btn,
+    .icon-btn{
+      appearance:none;
+      border:none;
+      border-radius:14px;
+      cursor:pointer;
+      color:#fff;
+      font-weight:700;
+      letter-spacing:.01em;
+      transition:transform .15s ease, opacity .15s ease, background .15s ease;
+    }
+
+    .nav-btn:hover,
+    .action-btn:hover,
+    .mini-btn:hover,
+    .scan-btn:hover,
+    .icon-btn:hover{transform:translateY(-1px)}
+
+    .nav-btn{
+      padding:12px 16px;
+      background:linear-gradient(135deg, var(--bw-red), var(--bw-red-2));
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      box-shadow:0 10px 24px rgba(198,40,40,.28);
+      white-space:nowrap;
+    }
+
+    .hero,
+    .card,
+    .scanner-sheet,
+    .toast{
+      background:linear-gradient(180deg, var(--bw-panel), rgba(255,255,255,.05));
+      border:1px solid var(--bw-border);
+      border-radius:var(--radius);
+      box-shadow:var(--bw-shadow);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .hero{
+      padding:22px 22px 18px;
+      margin-bottom:18px;
+    }
+
+    h1{
+      margin:0 0 8px;
+      font-size:clamp(1.6rem, 2.5vw, 2.25rem);
+      line-height:1.05;
+    }
+
+    .lead{
+      margin:0;
+      color:var(--bw-muted);
+      font-size:.98rem;
+      max-width:760px;
+    }
+
+    .card{padding:18px}
+
+    .grid-top{
+      display:grid;
+      grid-template-columns:repeat(5,minmax(0,1fr));
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .field,
+    .qty-wrap,
+    .part-wrap{display:flex;flex-direction:column;gap:6px}
+
+    label{
+      font-size:.82rem;
+      font-weight:700;
+      color:#fff;
+      letter-spacing:.02em;
+    }
+
+    input, textarea{
+      width:100%;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.94);
+      color:#10263f;
+      padding:12px 13px;
+      font-size:16px;
+      min-height:46px;
+      outline:none;
+    }
+
+    input:focus, textarea:focus{
+      border-color:rgba(224,58,58,.9);
+      box-shadow:0 0 0 3px rgba(224,58,58,.18);
+    }
+
+    .items-wrap{margin-top:6px}
+    .items-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+      flex-wrap:wrap;
+    }
+
+    .items-title{
+      font-size:1rem;
+      font-weight:700;
+    }
+
+    .items-sub{
+      font-size:.86rem;
+      color:var(--bw-muted);
+      margin-top:4px;
+    }
+
+    .item-row{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) 110px 52px;
+      gap:10px;
+      margin-bottom:10px;
+      align-items:end;
+    }
+
+    .part-controls{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:8px;
+      align-items:end;
+    }
+
+    .scan-btn,
+    .mini-btn,
+    .action-btn,
+    .icon-btn{
+      background:linear-gradient(135deg, var(--bw-navy-2), #244d77);
+      box-shadow:0 10px 18px rgba(9,19,31,.22);
+    }
+
+    .scan-btn{padding:12px 14px; min-height:46px; white-space:nowrap}
+    .mini-btn{padding:12px 14px; min-height:46px}
+    .icon-btn{padding:12px 0; min-height:46px}
+    .action-btn{
+      padding:14px 18px;
+      min-height:48px;
+      background:linear-gradient(135deg, var(--bw-red), var(--bw-red-2));
+      box-shadow:0 10px 24px rgba(198,40,40,.28);
+    }
+
+    .bottom-actions{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-top:18px;
+      flex-wrap:wrap;
+    }
+
+    .left-actions,
+    .right-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .helper{
+      color:var(--bw-muted);
+      font-size:.84rem;
+    }
+
+    .scanner-overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(4,10,18,.76);
+      display:none;
+      padding:18px;
+      z-index:1000;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .scanner-overlay.active{display:flex}
+
+    .scanner-sheet{
+      width:min(720px,100%);
+      padding:18px;
+    }
+
+    .scanner-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    .scanner-title{font-size:1.1rem;font-weight:700}
+    .scanner-note{font-size:.88rem;color:var(--bw-muted);margin-bottom:12px}
+
+    #scannerVideo{
+      width:100%;
+      border-radius:16px;
+      background:#000;
+      aspect-ratio: 4 / 3;
+      object-fit:cover;
+    }
+
+    .scanner-actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      margin-top:14px;
+      flex-wrap:wrap;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:22px;
+      transform:translateX(-50%);
+      padding:12px 16px;
+      z-index:1200;
+      display:none;
+      font-size:.92rem;
+    }
+
+    .toast.show{display:block}
+
+    @media (max-width: 980px){
+      .grid-top{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .item-row{grid-template-columns:minmax(0,1fr) 95px 48px}
+    }
+
+    @media (max-width: 680px){
+      .page{padding:14px 12px 36px}
+      .topbar{align-items:flex-start;flex-direction:column}
+      .grid-top{grid-template-columns:1fr}
+      .item-row{grid-template-columns:1fr}
+      .part-controls{grid-template-columns:1fr}
+      .bottom-actions{align-items:stretch}
+      .left-actions,.right-actions{width:100%}
+      .left-actions > *, .right-actions > *{flex:1 1 auto}
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="brand" aria-label="Bearing Wholesalers">
+        <div class="brand-mark">BW</div>
+        <div>
+          <div class="brand-title">Bearing Wholesalers</div>
+          <div class="brand-sub">Dashboard Tool</div>
+        </div>
+      </div>
+      <a class="nav-btn" href="dashboard.html">⤒ Dashboard</a>
+    </div>
+
+    <section class="hero">
+      <h1>Order Capture</h1>
+      <p class="lead">Enter customer details across the top, then scan or type part numbers and quantities below. When complete, the order opens as a prefilled email using the address entered in the email field.</p>
+    </section>
+
+    <section class="card">
+      <form id="orderForm">
+        <div class="grid-top">
+          <div class="field">
+            <label for="companyName">Company Name</label>
+            <input id="companyName" name="companyName" type="text" autocomplete="organization" />
+          </div>
+          <div class="field">
+            <label for="customerName">Customer Name</label>
+            <input id="customerName" name="customerName" type="text" autocomplete="name" />
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" inputmode="email" autocomplete="email" required />
+          </div>
+          <div class="field">
+            <label for="date">Date</label>
+            <input id="date" name="date" type="date" />
+          </div>
+          <div class="field">
+            <label for="reference">Reference</label>
+            <input id="reference" name="reference" type="text" />
+          </div>
+        </div>
+
+        <div class="items-wrap">
+          <div class="items-head">
+            <div>
+              <div class="items-title">Order Lines</div>
+              <div class="items-sub">Scan QR or type the part number, then enter the quantity. A fresh line is created automatically after each completed entry.</div>
+            </div>
+          </div>
+
+          <div id="itemsContainer"></div>
+        </div>
+
+        <div class="bottom-actions">
+          <div>
+            <div class="helper">Email summary format: Qty | Part Number</div>
+          </div>
+          <div class="right-actions">
+            <button type="button" class="mini-btn" id="addLineBtn">Add New Line</button>
+            <button type="submit" class="action-btn" id="completeBtn">Complete</button>
+          </div>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <div class="scanner-overlay" id="scannerOverlay" aria-hidden="true">
+    <div class="scanner-sheet">
+      <div class="scanner-head">
+        <div class="scanner-title">Scan Part QR Code</div>
+        <button type="button" class="mini-btn" id="closeScannerBtn">Close</button>
+      </div>
+      <div class="scanner-note" id="scannerNote">Point the camera at the QR code. The scanned value will drop straight into the selected part number field.</div>
+      <video id="scannerVideo" playsinline muted></video>
+      <div class="scanner-actions">
+        <button type="button" class="mini-btn" id="stopScannerBtn">Stop Camera</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('orderForm');
+      const itemsContainer = document.getElementById('itemsContainer');
+      const addLineBtn = document.getElementById('addLineBtn');
+      const scannerOverlay = document.getElementById('scannerOverlay');
+      const scannerVideo = document.getElementById('scannerVideo');
+      const closeScannerBtn = document.getElementById('closeScannerBtn');
+      const stopScannerBtn = document.getElementById('stopScannerBtn');
+      const scannerNote = document.getElementById('scannerNote');
+      const toast = document.getElementById('toast');
+      const dateField = document.getElementById('date');
+
+      if (dateField && !dateField.value) {
+        dateField.value = new Date().toISOString().slice(0,10);
+      }
+
+      let rowCounter = 0;
+      let activePartInput = null;
+      let mediaStream = null;
+      let scanFrame = null;
+      let detector = null;
+      let detectorReady = false;
+      let scanBusy = false;
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => toast.classList.remove('show'), 2200);
+      }
+
+      function createRow(partValue = '', qtyValue = '') {
+        rowCounter += 1;
+        const row = document.createElement('div');
+        row.className = 'item-row';
+        row.dataset.rowId = String(rowCounter);
+        row.innerHTML = `
+          <div class="part-wrap">
+            <label for="part-${rowCounter}">Part Number</label>
+            <div class="part-controls">
+              <input id="part-${rowCounter}" class="part-input" type="text" placeholder="Scan or enter part number" value="${escapeHtml(partValue)}" />
+              <button type="button" class="scan-btn">Scan QR</button>
+            </div>
+          </div>
+          <div class="qty-wrap">
+            <label for="qty-${rowCounter}">Qty</label>
+            <input id="qty-${rowCounter}" class="qty-input" type="number" inputmode="numeric" min="1" step="1" placeholder="Qty" value="${escapeHtml(qtyValue)}" />
+          </div>
+          <div>
+            <button type="button" class="icon-btn remove-btn" aria-label="Remove line">✕</button>
+          </div>
+        `;
+        itemsContainer.appendChild(row);
+
+        const partInput = row.querySelector('.part-input');
+        const qtyInput = row.querySelector('.qty-input');
+        const scanBtn = row.querySelector('.scan-btn');
+        const removeBtn = row.querySelector('.remove-btn');
+
+        partInput.addEventListener('focus', () => activePartInput = partInput);
+        partInput.addEventListener('input', () => activePartInput = partInput);
+        scanBtn.addEventListener('click', () => openScanner(partInput));
+
+        qtyInput.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            completeRowAndAdvance(row);
+          }
+        });
+
+        qtyInput.addEventListener('blur', () => {
+          const part = partInput.value.trim();
+          const qty = qtyInput.value.trim();
+          const lastRow = itemsContainer.lastElementChild === row;
+          if (lastRow && part && qty) {
+            addRowAndFocus();
+          }
+        });
+
+        removeBtn.addEventListener('click', () => {
+          if (itemsContainer.children.length === 1) {
+            row.querySelector('.part-input').value = '';
+            row.querySelector('.qty-input').value = '';
+            row.querySelector('.part-input').focus();
+            return;
+          }
+          row.remove();
+        });
+
+        return row;
+      }
+
+      function completeRowAndAdvance(row) {
+        const partInput = row.querySelector('.part-input');
+        const qtyInput = row.querySelector('.qty-input');
+        const part = partInput.value.trim();
+        const qty = qtyInput.value.trim();
+        if (!part || !qty) return;
+
+        if (itemsContainer.lastElementChild === row) {
+          addRowAndFocus();
+        } else {
+          const nextRow = row.nextElementSibling;
+          const nextPart = nextRow?.querySelector('.part-input');
+          nextPart?.focus();
+        }
+      }
+
+      function addRowAndFocus() {
+        const row = createRow();
+        row.querySelector('.part-input').focus();
+      }
+
+      function collectRows() {
+        return Array.from(itemsContainer.querySelectorAll('.item-row'))
+          .map(row => ({
+            part: row.querySelector('.part-input').value.trim(),
+            qty: row.querySelector('.qty-input').value.trim(),
+          }))
+          .filter(item => item.part && item.qty);
+      }
+
+      function buildEmailBody(data, rows) {
+        const lines = [];
+        lines.push('Order Request');
+        lines.push('');
+        lines.push(`Company: ${data.companyName || ''}`);
+        lines.push(`Customer: ${data.customerName || ''}`);
+        lines.push(`Date: ${data.date || ''}`);
+        lines.push(`Reference: ${data.reference || ''}`);
+        lines.push('');
+        lines.push('Qty | Part Number');
+        lines.push('------------------------------');
+        rows.forEach(item => lines.push(`${item.qty} | ${item.part}`));
+        lines.push('');
+        lines.push('Sent from BW Order Capture');
+        return lines.join('\n');
+      }
+
+      function buildSubject(data) {
+        const bits = ['Order Request'];
+        if (data.companyName) bits.push(data.companyName);
+        if (data.reference) bits.push(data.reference);
+        return bits.join(' - ');
+      }
+
+      function formDataObject() {
+        return {
+          companyName: document.getElementById('companyName').value.trim(),
+          customerName: document.getElementById('customerName').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          date: document.getElementById('date').value.trim(),
+          reference: document.getElementById('reference').value.trim(),
+        };
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#39;');
+      }
+      window.escapeHtml = escapeHtml;
+
+      async function prepareDetector() {
+        if (detectorReady) return true;
+        if (!('BarcodeDetector' in window)) return false;
+        try {
+          const formats = BarcodeDetector.getSupportedFormats ? await BarcodeDetector.getSupportedFormats() : ['qr_code'];
+          if (!formats.includes('qr_code')) return false;
+          detector = new BarcodeDetector({ formats: ['qr_code'] });
+          detectorReady = true;
+          return true;
+        } catch (error) {
+          return false;
+        }
+      }
+
+      async function openScanner(partInput) {
+        activePartInput = partInput;
+        const supported = await prepareDetector();
+        if (!supported) {
+          showToast('QR scan is not supported in this browser. Please type the part number.');
+          return;
+        }
+
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: 'environment' } },
+            audio: false,
+          });
+          scannerVideo.srcObject = mediaStream;
+          await scannerVideo.play();
+          scannerOverlay.classList.add('active');
+          scannerOverlay.setAttribute('aria-hidden', 'false');
+          scannerNote.textContent = 'Point the camera at the QR code. The scanned value will drop straight into the selected part number field.';
+          scanLoop();
+        } catch (error) {
+          showToast('Unable to access the camera on this device.');
+        }
+      }
+
+      async function scanLoop() {
+        if (!detector || !mediaStream || scanBusy) {
+          scanFrame = requestAnimationFrame(scanLoop);
+          return;
+        }
+
+        if (scannerVideo.readyState >= 2) {
+          try {
+            scanBusy = true;
+            const barcodes = await detector.detect(scannerVideo);
+            const qr = barcodes.find(code => code.rawValue);
+            if (qr) {
+              applyScannedValue(qr.rawValue);
+              return;
+            }
+          } catch (error) {
+            // ignore frame errors and continue
+          } finally {
+            scanBusy = false;
+          }
+        }
+
+        scanFrame = requestAnimationFrame(scanLoop);
+      }
+
+      function applyScannedValue(value) {
+        if (!activePartInput) return;
+        activePartInput.value = value;
+        const row = activePartInput.closest('.item-row');
+        const qtyInput = row?.querySelector('.qty-input');
+        closeScanner();
+        qtyInput?.focus();
+        showToast('Part number scanned');
+      }
+
+      function closeScanner() {
+        scannerOverlay.classList.remove('active');
+        scannerOverlay.setAttribute('aria-hidden', 'true');
+        if (scanFrame) cancelAnimationFrame(scanFrame);
+        scanFrame = null;
+        if (scannerVideo.srcObject) {
+          scannerVideo.pause();
+          scannerVideo.srcObject = null;
+        }
+        if (mediaStream) {
+          mediaStream.getTracks().forEach(track => track.stop());
+          mediaStream = null;
+        }
+      }
+
+      addLineBtn.addEventListener('click', addRowAndFocus);
+      closeScannerBtn.addEventListener('click', closeScanner);
+      stopScannerBtn.addEventListener('click', closeScanner);
+      scannerOverlay.addEventListener('click', (event) => {
+        if (event.target === scannerOverlay) closeScanner();
+      });
+
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const data = formDataObject();
+        const rows = collectRows();
+
+        if (!data.email) {
+          showToast('Please enter the email address.');
+          document.getElementById('email').focus();
+          return;
+        }
+
+        if (!rows.length) {
+          showToast('Please add at least one order line.');
+          const firstPart = itemsContainer.querySelector('.part-input');
+          firstPart?.focus();
+          return;
+        }
+
+        const subject = buildSubject(data);
+        const body = buildEmailBody(data, rows);
+        const mailto = `mailto:${encodeURIComponent(data.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.location.href = mailto;
+      });
+
+      createRow();
+    });
+  </script>
+</body>
+</html>
