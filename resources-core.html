@@ -4,383 +4,196 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Rack Map Builder</title>
+
+  <!-- BW Global Styles -->
+  <link href="assets/css/style.css" rel="stylesheet"/>
+
   <style>
-    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#0b1320;color:#fff;padding:16px;box-sizing:border-box}
-    .container{max-width:1100px;margin:0 auto}
-    h1{margin:0 0 16px;font-size:28px}
-    h2{margin:0 0 10px;font-size:20px}
     .panel{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:16px;margin-bottom:16px}
     .grid{display:grid;gap:10px}
     .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
-    label{display:block;font-size:13px;margin-bottom:6px;color:#b8c2d0}
-    input,select,button{width:100%;min-height:44px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:#111a28;color:#fff;padding:0 12px;box-sizing:border-box;font-size:15px}
-    button{background:#c62828;border-color:#c62828;font-weight:700;cursor:pointer}
-    button.secondary{background:#1a2433;border-color:rgba(255,255,255,.15)}
     .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-    .actions button{width:auto;min-width:160px;padding:0 16px}
+    .uploadBtn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:#1a2433;color:#fff;font-weight:700;cursor:pointer;padding:0 16px}
+    .uploadBtn input{display:none}
     .map{overflow:auto;margin-top:12px}
     .shelfRow{display:grid;gap:8px;margin-bottom:8px;min-width:max-content}
     .cell{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);border-radius:10px;padding:8px;font-size:12px}
-    .shelfLabel{display:flex;align-items:center;justify-content:center;font-weight:700;min-height:44px;text-transform:uppercase}
-    .binCode{font-weight:700;margin-bottom:8px;line-height:1.3;word-break:break-word;text-transform:uppercase}
-    .binSub{color:#b8c2d0;font-size:11px;margin:-2px 0 8px;text-transform:uppercase}
-    .tableWrap{overflow:auto;margin-top:12px}
-    table{width:100%;min-width:980px;border-collapse:collapse}
-    th,td{border-bottom:1px solid rgba(255,255,255,.10);padding:8px;text-align:left;vertical-align:top}
+    .shelfLabel{text-transform:uppercase;font-weight:700;text-align:center}
+    .binCode{text-transform:uppercase;font-weight:700}
+    table{width:100%;border-collapse:collapse}
+    th,td{border-bottom:1px solid rgba(255,255,255,.10);padding:8px}
     th{background:#121d2b;position:sticky;top:0}
-    td input{min-height:38px;font-size:14px}
-    .qrCell{font-family:monospace;font-size:12px;color:#d7e4ff;word-break:break-all}
-    .note{color:#b8c2d0;font-size:13px;line-height:1.5;margin-top:10px}
-    @media(max-width:760px){.grid-2{grid-template-columns:1fr}.actions{flex-direction:column}.actions button{width:100%}}
+    .status{margin-top:10px;font-size:13px;color:#b8c2d0}
   </style>
 </head>
+
 <body>
-  <div class="container">
-    <h1>Rack Map Builder</h1>
+<div class="container">
 
-    <div class="panel">
-      <div class="grid grid-2">
-        <div>
-          <label for="customerName">Customer code/name</label>
-          <input id="customerName" type="text" placeholder="Example: ABCENG"/>
-        </div>
-        <div>
-          <label for="rackName">Rack name / location</label>
-          <input id="rackName" type="text" placeholder="Example: STORE01 or BOLTROOM"/>
-        </div>
-        <div>
-          <label for="sendEmail">Send map pack to</label>
-          <input id="sendEmail" type="email" placeholder="name@example.com"/>
-        </div>
-        <div>
-          <label for="rack">Rack number</label>
-          <input id="rack" type="number" min="0" max="99" value="0"/>
-        </div>
-        <div>
-          <label for="shelves">Number of shelves</label>
-          <input id="shelves" type="number" min="0" max="26" value="0"/>
-        </div>
-        <div>
-          <label for="bins">Bins per shelf</label>
-          <input id="bins" type="number" min="0" max="99" value="0"/>
-        </div>
-        <div>
-          <label for="positions">Default positions per bin</label>
-          <input id="positions" type="number" min="0" max="26" value="0"/>
-        </div>
-      </div>
+  <!-- HEADER -->
+  <div class="siteHeader">
+    <img src="assets/img/logo.png" class="siteLogo"/>
+  </div>
 
-      <div class="actions">
-        <button id="buildBtn" type="button">Build Rack</button>
-        <button id="resetBtn" type="button" class="secondary">Reset</button>
-        <button id="sendPackBtn" type="button" class="secondary">Send Map Pack</button>
-      </div>
-
-      <div class="note">
-        Rack map shows the abbreviated bin code only, e.g. <strong>01C04A:C</strong>.
-        The expanded bin list shows the full location as <strong>CUSTOMER:LOCATION:BIN</strong>, e.g. <strong>ABCENG:BOLTROOM:01C04A</strong>.
-      </div>
-    </div>
-
-    <div class="panel">
-      <h2>Rack Map</h2>
-      <div class="map" id="map"></div>
-    </div>
-
-    <div class="panel">
-      <h2>Expanded Bin List</h2>
-      <div class="tableWrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Full Bin Location</th>
-              <th>Bin Code</th>
-              <th>Part Number</th>
-              <th>Description</th>
-              <th>Min Stock</th>
-              <th>Max Stock</th>
-              <th>QR Code</th>
-            </tr>
-          </thead>
-          <tbody id="list"></tbody>
-        </table>
-      </div>
+  <div class="topbar">
+    <div class="leftBtns">
+      <a class="btn" href="index.html">⤒ Dashboard</a>
+      <a class="btn" href="resources.html">← Back</a>
     </div>
   </div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-      let state = [];
+  <section class="heroPanel">
+    <div class="heroIcon">🗂️</div>
+    <h1>Rack Map Builder</h1>
+    <p class="subtitle">Build racks, export CSV for customers, then upload completed data to review and process.</p>
+  </section>
 
-      const customerNameEl = document.getElementById('customerName');
-      const rackNameEl = document.getElementById('rackName');
-      const sendEmailEl = document.getElementById('sendEmail');
-      const rackEl = document.getElementById('rack');
-      const shelvesEl = document.getElementById('shelves');
-      const binsEl = document.getElementById('bins');
-      const positionsEl = document.getElementById('positions');
+  <!-- INPUT PANEL -->
+  <div class="panel">
+    <div class="grid grid-2">
+      <input id="customerName" placeholder="Customer Code"/>
+      <input id="rackName" placeholder="Rack Location"/>
+      <input id="rack" type="number" placeholder="Rack #" value="0"/>
+      <input id="shelves" type="number" placeholder="Shelves" value="0"/>
+      <input id="bins" type="number" placeholder="Bins per shelf" value="0"/>
+      <input id="positions" type="number" placeholder="Positions per bin" value="0"/>
+    </div>
 
-      const buildBtn = document.getElementById('buildBtn');
-      const resetBtn = document.getElementById('resetBtn');
-      const sendPackBtn = document.getElementById('sendPackBtn');
+    <div class="actions">
+      <button id="buildBtn">Build Rack</button>
+      <button id="downloadCustomerBtn">Download Customer CSV</button>
+      <button id="downloadInternalBtn">Download Internal CSV</button>
 
-      const mapEl = document.getElementById('map');
-      const listEl = document.getElementById('list');
+      <label class="uploadBtn">
+        Upload CSV
+        <input type="file" id="uploadCsvInput" accept=".csv"/>
+      </label>
 
-      function pad(n){ return String(n).padStart(2,'0'); }
+      <button id="resetBtn">Reset</button>
+    </div>
 
-      function cleanSegment(value, fallback){
-        const cleaned = String(value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-        return cleaned || fallback;
-      }
+    <div class="status" id="status">Ready</div>
+  </div>
 
-      function shelfLetter(i){ return alpha[i] || 'Z'; }
+  <!-- MAP -->
+  <div class="panel">
+    <h2>Rack Map</h2>
+    <div id="map"></div>
+  </div>
 
-      function binCode(item, positionIndex = 0){
-        return `${item.rack}${shelfLetter(item.s)}${pad(item.b + 1)}${alpha[positionIndex]}`;
-      }
+  <!-- LIST -->
+  <div class="panel">
+    <h2>Bin List</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Full Location</th>
+          <th>Bin Code</th>
+          <th>Part</th>
+          <th>Description</th>
+          <th>Min</th>
+          <th>Max</th>
+        </tr>
+      </thead>
+      <tbody id="list"></tbody>
+    </table>
+  </div>
 
-      function compactMapCode(item){
-        if(item.pos === 1) return binCode(item, 0);
-        return `${binCode(item, 0)}:${alpha[item.pos - 1]}`;
-      }
+</div>
 
-      function fullLocation(binCodeValue){
-        const customer = cleanSegment(customerNameEl.value, 'CUSTOMER');
-        const location = cleanSegment(rackNameEl.value, 'LOCATION');
-        return `${customer}:${location}:${binCodeValue}`;
-      }
+<script>
+const alpha="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
+let state=[],data={}
 
-      function expand(item){
-        const out = [];
-        for(let i = 0; i < item.pos; i++){
-          const code = binCode(item, i);
-          out.push({ bin: code, full: fullLocation(code) });
-        }
-        return out;
-      }
+function pad(n){return String(n).padStart(2,'0')}
+function clean(v){return (v||"").toUpperCase().replace(/[^A-Z0-9]/g,"")}
+function shelf(i){return alpha[i]}
 
-      function clearOutputs(){
-        state = [];
-        mapEl.innerHTML = '';
-        listEl.innerHTML = '';
-      }
+function build(){
+  const r=pad(document.getElementById("rack").value)
+  const s=document.getElementById("shelves").value
+  const b=document.getElementById("bins").value
+  const p=document.getElementById("positions").value
 
-      function buildState(){
-        const rackNumber = parseInt(rackEl.value || '0', 10);
-        const shelves = parseInt(shelvesEl.value || '0', 10);
-        const bins = parseInt(binsEl.value || '0', 10);
-        const pos = parseInt(positionsEl.value || '0', 10);
+  state=[]
+  for(let i=0;i<s;i++){
+    for(let j=0;j<b;j++){
+      state.push({r,i,j,p})
+    }
+  }
+  draw()
+}
 
-        if(rackNumber <= 0 || shelves <= 0 || bins <= 0 || pos <= 0){
-          clearOutputs();
-          return false;
-        }
+function code(x,pos=0){
+  return x.r + shelf(x.i) + pad(x.j+1) + alpha[pos]
+}
 
-        const rack = pad(Math.min(99, rackNumber));
-        const safeShelves = Math.min(26, shelves);
-        const safeBins = Math.min(99, bins);
-        const safePos = Math.min(26, pos);
+function full(c){
+  return clean(customerName.value)+":"+clean(rackName.value)+":"+c
+}
 
-        state = [];
-        for(let s = 0; s < safeShelves; s++){
-          for(let b = 0; b < safeBins; b++){
-            state.push({ rack, s, b, pos: safePos });
-          }
-        }
-        return true;
-      }
+function draw(){
+  map.innerHTML=""
+  list.innerHTML=""
 
-      function drawMap(){
-        mapEl.innerHTML = '';
-        const shelves = parseInt(shelvesEl.value || '0', 10);
-        const bins = parseInt(binsEl.value || '0', 10);
-        if(shelves <= 0 || bins <= 0 || !state.length) return;
+  state.forEach(x=>{
+    let row=document.createElement("div")
+    row.className="cell"
+    row.innerHTML=code(x)
+    map.appendChild(row)
 
-        for(let s = 0; s < shelves; s++){
-          const row = document.createElement('div');
-          row.className = 'shelfRow';
-          row.style.gridTemplateColumns = `90px repeat(${bins}, minmax(120px, 1fr))`;
+    for(let i=0;i<x.p;i++){
+      let c=code(x,i)
+      let tr=document.createElement("tr")
+      tr.innerHTML=`
+        <td>${full(c)}</td>
+        <td>${c}</td>
+        <td><input></td>
+        <td><input></td>
+        <td><input></td>
+        <td><input></td>
+      `
+      list.appendChild(tr)
+    }
+  })
+}
 
-          const label = document.createElement('div');
-          label.className = 'cell shelfLabel';
-          label.textContent = `SHELF ${shelfLetter(s)}`;
-          row.appendChild(label);
+function csv(){
+  let rows=[["Full","Code","Part","Desc","Min","Max"]]
+  list.querySelectorAll("tr").forEach(r=>{
+    let i=r.querySelectorAll("input")
+    rows.push([r.children[0].innerText,r.children[1].innerText,i[0].value,i[1].value,i[2].value,i[3].value])
+  })
+  return rows.map(r=>r.join(",")).join("\n")
+}
 
-          for(let b = 0; b < bins; b++){
-            const item = state.find(x => x.s === s && x.b === b);
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            cell.innerHTML = `
-              <div class="binCode">${compactMapCode(item)}</div>
-              <div class="binSub">BIN ${pad(item.b + 1)}</div>
-              <select data-s="${s}" data-b="${b}">
-                ${[1,2,3,4,5].map(n => `<option value="${n}" ${item.pos === n ? 'selected' : ''}>${n} position${n === 1 ? '' : 's'}</option>`).join('')}
-              </select>
-            `;
-            row.appendChild(cell);
-          }
-          mapEl.appendChild(row);
-        }
+function download(name){
+  let blob=new Blob([csv()],{type:"text/csv"})
+  let a=document.createElement("a")
+  a.href=URL.createObjectURL(blob)
+  a.download=name
+  a.click()
+}
 
-        mapEl.querySelectorAll('select').forEach(sel => {
-          sel.addEventListener('change', e => {
-            const s = parseInt(e.target.dataset.s, 10);
-            const b = parseInt(e.target.dataset.b, 10);
-            const item = state.find(x => x.s === s && x.b === b);
-            if(item){
-              item.pos = parseInt(e.target.value, 10);
-              drawMap();
-              drawList();
-            }
-          });
-        });
-      }
+function upload(file){
+  let reader=new FileReader()
+  reader.onload=()=>{
+    let rows=reader.result.split("\n").slice(1)
+    rows.forEach(r=>{
+      let cols=r.split(",")
+      data[cols[1]]={p:cols[2],d:cols[3],min:cols[4],max:cols[5]}
+    })
+    draw()
+  }
+  reader.readAsText(file)
+}
 
-      function drawList(){
-        listEl.innerHTML = '';
-        if(!state.length) return;
+buildBtn.onclick=build
+downloadCustomerBtn.onclick=()=>download("customer.csv")
+downloadInternalBtn.onclick=()=>download("internal.csv")
+uploadCsvInput.onchange=e=>upload(e.target.files[0])
+resetBtn.onclick=()=>{location.reload()}
+</script>
 
-        state.forEach(item => {
-          expand(item).forEach(loc => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${loc.full}</td>
-              <td>${loc.bin}</td>
-              <td><input type="text"/></td>
-              <td><input type="text"/></td>
-              <td><input type="text" inputmode="numeric"/></td>
-              <td><input type="text" inputmode="numeric"/></td>
-              <td class="qrCell">${loc.full}</td>
-            `;
-            listEl.appendChild(tr);
-          });
-        });
-      }
-
-      function buildAll(){
-        const built = buildState();
-        if(!built) return;
-        drawMap();
-        drawList();
-      }
-
-      function getCustomerRows(){
-        const rows = [['Full Bin Location','Bin Code','Customer Part Number','Description','Min Stock','Max Stock']];
-        Array.from(listEl.querySelectorAll('tr')).forEach(tr => {
-          const inputs = tr.querySelectorAll('input');
-          rows.push([
-            tr.children[0].innerText.trim(),
-            tr.children[1].innerText.trim(),
-            inputs[0].value.trim(),
-            inputs[1].value.trim(),
-            inputs[2].value.trim(),
-            inputs[3].value.trim()
-          ]);
-        });
-        return rows;
-      }
-
-      function getInternalRows(){
-        const rows = [['Full Bin Location','Bin Code','Customer Part Number','Description','Min Stock','Max Stock','Our Part Number','QR Code']];
-        Array.from(listEl.querySelectorAll('tr')).forEach(tr => {
-          const inputs = tr.querySelectorAll('input');
-          rows.push([
-            tr.children[0].innerText.trim(),
-            tr.children[1].innerText.trim(),
-            inputs[0].value.trim(),
-            inputs[1].value.trim(),
-            inputs[2].value.trim(),
-            inputs[3].value.trim(),
-            '',
-            tr.children[6].innerText.trim()
-          ]);
-        });
-        return rows;
-      }
-
-      function rowsToCsv(rows){
-        return rows.map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(',')).join('\n');
-      }
-
-      function downloadFile(filename, content, mimeType){
-        const blob = new Blob([content], { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-      }
-
-      function openMailDraft(){
-        const to = sendEmailEl.value.trim();
-        if(!to){
-          alert('Enter an email address in "Send map pack to".');
-          return;
-        }
-
-        const customer = cleanSegment(customerNameEl.value, 'CUSTOMER');
-        const location = cleanSegment(rackNameEl.value, 'LOCATION');
-        const rackNumber = parseInt(rackEl.value || '0', 10);
-        const rack = rackNumber > 0 ? pad(Math.min(99, rackNumber)) : '00';
-
-        const subject = `Rack Map Pack | ${customer} | ${location} | Rack ${rack}`;
-        const body = [
-          `Hi,`,
-          ``,
-          `Please find the rack map pack for ${customer}, ${location}, Rack ${rack}.`,
-          ``,
-          `Two CSV files have just been downloaded from the tool:`,
-          `- Customer Form CSV`,
-          `- Internal Master CSV`,
-          ``,
-          `Please attach those downloaded files to this email before sending.`,
-          ``,
-          `Regards`
-        ].join('\n');
-
-        window.location.href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      }
-
-      buildBtn.addEventListener('click', buildAll);
-
-      resetBtn.addEventListener('click', () => {
-        customerNameEl.value = '';
-        rackNameEl.value = '';
-        sendEmailEl.value = '';
-        rackEl.value = '0';
-        shelvesEl.value = '0';
-        binsEl.value = '0';
-        positionsEl.value = '0';
-        clearOutputs();
-      });
-
-      sendPackBtn.addEventListener('click', () => {
-        if(!listEl.querySelector('tr')){
-          alert('Build the rack before sending the map pack.');
-          return;
-        }
-
-        const customer = cleanSegment(customerNameEl.value, 'CUSTOMER');
-        const location = cleanSegment(rackNameEl.value, 'LOCATION');
-        const rackNumber = parseInt(rackEl.value || '0', 10);
-        const rack = rackNumber > 0 ? pad(Math.min(99, rackNumber)) : '00';
-
-        const customerCsv = rowsToCsv(getCustomerRows());
-        const internalCsv = rowsToCsv(getInternalRows());
-
-        downloadFile(`customer-form-${customer}-${location}-rack-${rack}.csv`, customerCsv, 'text/csv;charset=utf-8');
-        downloadFile(`internal-master-${customer}-${location}-rack-${rack}.csv`, internalCsv, 'text/csv;charset=utf-8');
-
-        setTimeout(() => openMailDraft(), 900);
-      });
-
-      clearOutputs();
-    });
-  </script>
 </body>
 </html>
