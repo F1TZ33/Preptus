@@ -49,15 +49,39 @@
   </section>
 
   <!-- INPUT PANEL -->
-  <div class="panel">
-    <div class="grid grid-2">
-      <input id="customerName" placeholder="Customer Code"/>
-      <input id="rackName" placeholder="Rack Location"/>
-      <input id="rack" type="number" placeholder="Rack #" value="0"/>
-      <input id="shelves" type="number" placeholder="Shelves" value="0"/>
-      <input id="bins" type="number" placeholder="Bins per shelf" value="0"/>
-      <input id="positions" type="number" placeholder="Positions per bin" value="0"/>
-    </div>
+  <div class="grid grid-2">
+
+  <div class="field">
+    <label>Customer Code</label>
+    <input id="customerName" type="text"/>
+  </div>
+
+  <div class="field">
+    <label>Rack Location</label>
+    <input id="rackName" type="text"/>
+  </div>
+
+  <div class="field">
+    <label>Rack Number</label>
+    <input id="rack" type="number" value="0"/>
+  </div>
+
+  <div class="field">
+    <label>Shelves</label>
+    <input id="shelves" type="number" value="0"/>
+  </div>
+
+  <div class="field">
+    <label>Bins per Shelf</label>
+    <input id="bins" type="number" value="0"/>
+  </div>
+
+  <div class="field">
+    <label>Positions per Bin</label>
+    <input id="positions" type="number" value="0"/>
+  </div>
+
+</div>
 
     <div class="actions">
       <button id="buildBtn">Build Rack</button>
